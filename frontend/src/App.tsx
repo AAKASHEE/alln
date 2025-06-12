@@ -221,47 +221,51 @@ function App() {
     }
   };
 
-  // Mobile-optimized link click handler
-  const handleLinkClick = (link: Link, event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+ // Mobile-optimized link click handler - FIXED VERSION
+const handleLinkClick = (link: Link, event?: React.MouseEvent) => {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
-    // Add haptic feedback for mobile
-    addHapticFeedback();
+  // Add haptic feedback for mobile
+  addHapticFeedback();
 
-    // Set click animation
-    setClickAnimations(prev => ({ ...prev, [link.id]: true }));
+  // Set click animation
+  setClickAnimations(prev => ({ ...prev, [link.id]: true }));
+  setTimeout(() => {
+    setClickAnimations(prev => ({ ...prev, [link.id]: false }));
+  }, 600);
+
+  // Track click without blocking navigation
+  trackLinkClick(link.id).catch(console.error);
+
+  // Handle navigation based on link type
+  if (link.type === 'email') {
+    // Email links should open in the same tab/default email client
     setTimeout(() => {
-      setClickAnimations(prev => ({ ...prev, [link.id]: false }));
-    }, 600);
-
-    // Track click without blocking navigation
-    trackLinkClick(link.id).catch(console.error);
-
-    // Small delay for visual feedback, then navigate
+      window.location.href = link.url;
+    }, 150);
+  } else {
+    // All other links should open in a new tab
     setTimeout(() => {
-      if (link.type === 'email') {
-        window.location.href = link.url;
-      } else {
-        // Mobile-optimized navigation
-        if (isMobileDevice()) {
-          // On mobile, use location.href for better compatibility
-          window.location.href = link.url;
-        } else {
-          // On desktop, try window.open first
-          const newWindow = window.open(link.url, '_blank', 'noopener,noreferrer');
-          
-          // Fallback if popup blocked
-          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-            window.location.href = link.url;
-          }
-        }
+      // Try to open in new tab with proper fallback
+      const newWindow = window.open(link.url, '_blank', 'noopener,noreferrer');
+      
+      // If popup was blocked or failed to open, show user a message
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Create a temporary link element and click it as fallback
+        const tempLink = document.createElement('a');
+        tempLink.href = link.url;
+        tempLink.target = '_blank';
+        tempLink.rel = 'noopener noreferrer';
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
       }
-    }, 150); // Small delay for visual feedback
-  };
-
+    }, 150);
+  }
+};
   // Get default links (fallback)
   const getDefaultLinks = (): Link[] => [
     {
