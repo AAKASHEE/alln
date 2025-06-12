@@ -288,7 +288,7 @@ function App() {
       type: 'email',
       icon: <Mail className="w-5 h-5" />,
       clicks: 0,
-      gradient: 'from-green-500 to-teal-600'
+      gradient: 'from-white-500 to-gray-800'
     },
   ];
 
