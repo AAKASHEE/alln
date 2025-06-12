@@ -325,11 +325,11 @@ const handleLinkClick = (link: Link, event?: React.MouseEvent) => {
     {
       id: '7',
       title: 'Email Me',
-      url: 'mailto:aakashpatar253@gmail.com',
+      url: 'mailto:aakashpata253@gmail.com',
       type: 'email',
       icon: <Mail className="w-5 h-5" />,
       clicks: 0,
-      gradient: 'from-red-500 to-pink-600'
+      gradient: 'from-white-500 to-gray-800'
     },
   ];
 

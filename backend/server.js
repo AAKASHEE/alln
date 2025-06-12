@@ -142,7 +142,7 @@ const initializeData = async () => {
         {
           id: '4',
           title: 'Connect on LinkedIn',
-          url: 'https://www.linkedin.com/in/aakashe/',
+          url: 'https://github.com/AAKASHEE/',
           type: 'social',
           clicks: 0,
           gradient: 'from-blue-600 to-blue-700'
@@ -166,10 +166,10 @@ const initializeData = async () => {
         {
           id: '7',
           title: 'Email Me',
-          url: 'mailto:aakashe@example.com',
+          url: 'mailto:aakashpatra253@gmail.com',
           type: 'contact',
           clicks: 0,
-          gradient: 'from-red-500 to-pink-600'
+          gradient: 'from-white-500 to-gray-800'
         }
       ];
 
