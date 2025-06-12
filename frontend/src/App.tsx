@@ -69,8 +69,20 @@ function App() {
   };
 
   // API Base URL - adjust this to your server URL
- const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
+  // Mobile detection utility
+  const isMobileDevice = () => {
+    return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           window.innerWidth <= 768;
+  };
+
+  // Add haptic feedback for mobile devices
+  const addHapticFeedback = () => {
+    if ('vibrate' in navigator && isMobileDevice()) {
+      navigator.vibrate(50); // Short vibration on tap
+    }
+  };
 
   const getIconForLink = (title: string, type: string): React.ReactNode => {
     const titleLower = title.toLowerCase();
@@ -147,7 +159,7 @@ function App() {
 
   // Calculate weekly growth
   const calculateWeeklyGrowth = (currentClicks: number) => {
-    const lastWeekClicks = parseInt(localStorage.getItem('lastWeekClicks') || '0');
+    const lastWeekClicks = parseInt(sessionStorage.getItem('lastWeekClicks') || '0');
     const growth = currentClicks - lastWeekClicks;
     const growthPercentage = lastWeekClicks > 0 ? ((growth / lastWeekClicks) * 100) : 0;
     
@@ -177,14 +189,9 @@ function App() {
     }
   };
 
-  // Track link click
+  // Track link click (non-blocking)
   const trackLinkClick = async (linkId: string) => {
     try {
-      setClickAnimations(prev => ({ ...prev, [linkId]: true }));
-      setTimeout(() => {
-        setClickAnimations(prev => ({ ...prev, [linkId]: false }));
-      }, 600);
-
       const response = await fetch(`${API_BASE}/track-click/${linkId}`, {
         method: 'POST',
         headers: {
@@ -214,15 +221,45 @@ function App() {
     }
   };
 
-  // Handle link click
-  const handleLinkClick = async (link: Link) => {
-    await trackLinkClick(link.id);
-    
-    if (link.type === 'email') {
-      window.location.href = link.url;
-    } else {
-      window.open(link.url, '_blank', 'noopener,noreferrer');
+  // Mobile-optimized link click handler
+  const handleLinkClick = (link: Link, event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
+
+    // Add haptic feedback for mobile
+    addHapticFeedback();
+
+    // Set click animation
+    setClickAnimations(prev => ({ ...prev, [link.id]: true }));
+    setTimeout(() => {
+      setClickAnimations(prev => ({ ...prev, [link.id]: false }));
+    }, 600);
+
+    // Track click without blocking navigation
+    trackLinkClick(link.id).catch(console.error);
+
+    // Small delay for visual feedback, then navigate
+    setTimeout(() => {
+      if (link.type === 'email') {
+        window.location.href = link.url;
+      } else {
+        // Mobile-optimized navigation
+        if (isMobileDevice()) {
+          // On mobile, use location.href for better compatibility
+          window.location.href = link.url;
+        } else {
+          // On desktop, try window.open first
+          const newWindow = window.open(link.url, '_blank', 'noopener,noreferrer');
+          
+          // Fallback if popup blocked
+          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            window.location.href = link.url;
+          }
+        }
+      }
+    }, 150); // Small delay for visual feedback
   };
 
   // Get default links (fallback)
@@ -288,7 +325,7 @@ function App() {
       type: 'email',
       icon: <Mail className="w-5 h-5" />,
       clicks: 0,
-      gradient: 'from-white-500 to-gray-800'
+      gradient: 'from-red-500 to-pink-600'
     },
   ];
 
@@ -296,17 +333,17 @@ function App() {
   useEffect(() => {
     const updateWeeklyStats = () => {
       const currentClicks = analytics.totalClicks;
-      localStorage.setItem('lastWeekClicks', currentClicks.toString());
+      sessionStorage.setItem('lastWeekClicks', currentClicks.toString());
       calculateWeeklyGrowth(currentClicks);
     };
 
-    const lastUpdate = localStorage.getItem('lastWeeklyUpdate');
+    const lastUpdate = sessionStorage.getItem('lastWeeklyUpdate');
     const now = new Date();
     const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
     
     if (!lastUpdate || parseInt(lastUpdate) < currentWeek) {
       updateWeeklyStats();
-      localStorage.setItem('lastWeeklyUpdate', currentWeek.toString());
+      sessionStorage.setItem('lastWeeklyUpdate', currentWeek.toString());
     }
 
     const weeklyInterval = setInterval(updateWeeklyStats, 7 * 24 * 60 * 60 * 1000);
@@ -368,11 +405,12 @@ function App() {
         <div className="flex justify-between items-center mb-8">
           <button
             onClick={() => setShowAnalytics(!showAnalytics)}
-            className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 ${
+            className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 touch-manipulation select-none active:scale-95 ${
               darkMode 
                 ? 'bg-white/10 hover:bg-white/20 text-white' 
                 : 'bg-white/50 hover:bg-white/70 text-gray-700'
             }`}
+            onTouchStart={() => {}} // Enables :active pseudo-class on iOS
           >
             <TrendingUp className="w-5 h-5" />
           </button>
@@ -380,21 +418,23 @@ function App() {
           <div className="flex gap-2">
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 ${
+              className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 touch-manipulation select-none active:scale-95 ${
                 darkMode 
                   ? 'bg-white/10 hover:bg-white/20 text-white' 
                   : 'bg-white/50 hover:bg-white/70 text-gray-700'
               }`}
+              onTouchStart={() => {}}
             >
               <Palette className="w-5 h-5" />
             </button>
             
             <button
-              className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 ${
+              className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 touch-manipulation select-none active:scale-95 ${
                 darkMode 
                   ? 'bg-white/10 hover:bg-white/20 text-white' 
                   : 'bg-white/50 hover:bg-white/70 text-gray-700'
               }`}
+              onTouchStart={() => {}}
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -501,7 +541,7 @@ function App() {
           </p>
         </div>
 
-        {/* Enhanced Links Grid */}
+        {/* Enhanced Mobile-Optimized Links Grid */}
         <div className="space-y-4">
           {links.map((link, index) => (
             <div
@@ -514,12 +554,13 @@ function App() {
               <div className={`absolute -inset-0.5 bg-gradient-to-r ${link.gradient} rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-300`}></div>
               
               <button
-                className={`relative w-full p-6 rounded-2xl backdrop-blur-md transition-all duration-300 ${
+                className={`relative w-full p-6 rounded-2xl backdrop-blur-md transition-all duration-300 touch-manipulation select-none active:scale-95 ${
                   darkMode 
                     ? 'bg-white/10 hover:bg-white/20 border border-white/20' 
                     : 'bg-white/70 hover:bg-white/90 border border-white/50'
                 } shadow-lg hover:shadow-xl`}
-                onClick={() => handleLinkClick(link)}
+                onClick={(e) => handleLinkClick(link, e)}
+                onTouchStart={() => {}} // Enables :active pseudo-class on iOS
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
