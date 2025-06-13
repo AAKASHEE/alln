@@ -388,7 +388,7 @@ const handleLinkClick = (link: Link, event?: React.MouseEvent) => {
       }`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className={`${darkMode ? 'text-white' : 'text-gray-800'}`}>Loading ...........</p>
+          <p className={`${darkMode ? 'text-white' : 'text-gray-800'}`}>Loading .......Please wait for a minute...</p>
         </div>
       </div>
     );
