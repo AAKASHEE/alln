@@ -133,6 +133,14 @@ const initializeData = async () => {
         },
         {
           id: '3',
+          title: 'BLOggn',
+          url: 'https://b-l-a-g.vercel.app/',
+          type: 'social',
+          clicks: 0,
+          gradient: 'from-indigo-600 via-purple-600 to-violet-600'
+        },
+        {
+          id: '4',
           title: 'Follow on Instagram',
           url: 'https://www.instagram.com/aakaas.he/',
           type: 'social',
@@ -140,7 +148,7 @@ const initializeData = async () => {
           gradient: 'from-pink-500 to-orange-500'
         },
         {
-          id: '4',
+          id: '5',
           title: 'Connect on LinkedIn',
           url: 'https://github.com/AAKASHEE/',
           type: 'social',
@@ -148,7 +156,7 @@ const initializeData = async () => {
           gradient: 'from-blue-600 to-blue-700'
         },
         {
-          id: '5',
+          id: '6',
           title: 'GitHub Projects',
           url: 'https://github.com/AAKASHEE?tab=repositories',
           type: 'social',
@@ -156,7 +164,7 @@ const initializeData = async () => {
           gradient: 'from-gray-700 to-gray-900'
         },
         {
-          id: '6',
+          id: '7',
           title: 'Twitter Updates',
           url: 'https://x.com/AAKASHEXX',
           type: 'social',
@@ -164,7 +172,7 @@ const initializeData = async () => {
           gradient: 'from-blue-400 to-blue-600'
         },
         {
-          id: '7',
+          id: '8',
           title: 'Email Me',
           url: 'mailto:aakashpatra253@gmail.com',
           type: 'contact',
